@@ -41,12 +41,12 @@ from robotiq_85_msgs.msg import GripperCmd, GripperStat
 class Robotiq85GripperTest:
 
     def __init__(self):
-    
-        self._num_grippers = rospy.get_param('~num_grippers',1)
-        
+
+        self._num_grippers = rospy.get_param('~num_grippers', 1)
+
         if (self._num_grippers == 1):
             rospy.Subscriber("/gripper/stat", GripperStat, self._update_gripper_stat, queue_size=10)
-            self._gripper_pub = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size=10)      
+            self._gripper_pub = rospy.Publisher('/gripper/cmd', GripperCmd, queue_size=10)
         elif (self._num_grippers == 2):
             rospy.Subscriber("/left_gripper/stat", GripperStat, self._update_gripper_stat, queue_size=10)
             self._left_gripper_pub = rospy.Publisher('/left_gripper/stat', GripperCmd, queue_size=10)
@@ -55,19 +55,18 @@ class Robotiq85GripperTest:
         else:
             rospy.logerr("Number of grippers not supported (needs to be 1 or 2)")
             return
-            
+
         self._gripper_stat = [GripperStat()] * self._num_grippers
-        self._gripper_cmd = [GripperCmd()]  * self._num_grippers
-            
+        self._gripper_cmd = [GripperCmd()] * self._num_grippers
+
         self._run_test()
-        
-        
+
     def _update_gripper_stat(self, stat):
         self._gripper_stat[0] = stat
+
     def _update_right_gripper_stat(self, stat):
         self._gripper_stat[1] = stat
-    
-    
+
     def _run_test(self):
         test_state = 0
         r = rospy.Rate(1)
@@ -77,7 +76,7 @@ class Robotiq85GripperTest:
                 ready = True
                 for i in range(self._num_grippers):
                     ready &= self._gripper_stat[i].is_ready
-            
+
             if (0 == test_state):
                 for i in range(self._num_grippers):
                     self._gripper_cmd[i].position = 0.0
@@ -90,7 +89,7 @@ class Robotiq85GripperTest:
                     if (self._gripper_stat[i].is_moving):
                         success = False
                 if success:
-                    test_state = 2                 
+                    test_state = 2
 
             if (2 == test_state):
                 for i in range(self._num_grippers):
@@ -131,18 +130,10 @@ class Robotiq85GripperTest:
                         success = False
                 if success:
                     test_state = 0
-                    
+
             if (self._num_grippers == 1):
-                self._gripper_pub.publish(self._gripper_cmd[0])    
+                self._gripper_pub.publish(self._gripper_cmd[0])
             elif (self._num_grippers == 2):
                 self._left_gripper_pub.publish(self._gripper_cmd[0])
                 self._right_gripper_pub.publish(self._gripper_cmd[1])
-            
-            r.sleep()                
-                
-            
-                
-        
-
-
-
+            r.sleep()

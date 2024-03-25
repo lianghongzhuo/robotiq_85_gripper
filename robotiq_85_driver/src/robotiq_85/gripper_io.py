@@ -34,17 +34,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  \Platform: Linux/ROS Indigo
 --------------------------------------------------------------------"""
-from modbus_crc import compute_modbus_rtu_crc,verify_modbus_rtu_crc
+from robotiq_85.modbus_crc import compute_modbus_rtu_crc, verify_modbus_rtu_crc
 import numpy as np
 import array
 
 ACTION_REQ_IDX = 7
-POS_INDEX      = 10 
-SPEED_INDEX    = 11
-FORCE_INDEX    = 12
+POS_INDEX = 10
+SPEED_INDEX = 11
+FORCE_INDEX = 12
+
 
 class GripperIO:
-    def __init__(self,device):
+    def __init__(self, device):
         self.device = device+9
         self.rPR = 0
         self.rSP = 255
@@ -62,32 +63,32 @@ class GripperIO:
         self.gPR = 0
         self.gCU = 0
         self.act_cmd = [0] * 0x19
-        self.act_cmd[:7] = [self.device, 0x10, 0x03, 0xE8, 0x00,0x08, 0x10]
+        self.act_cmd[:7] = [self.device, 0x10, 0x03, 0xE8, 0x00, 0x08, 0x10]
         self.act_cmd_bytes = ""
         self._update_cmd()
         self.stat_cmd = [self.device, 0x03, 0x07, 0xD0, 0x00, 0x08]
         compute_modbus_rtu_crc(self.stat_cmd)
-        self.stat_cmd_bytes = array.array('B',self.stat_cmd).tostring()
-        
+        self.stat_cmd_bytes = array.array('B', self.stat_cmd).tobytes()
+
     def activate_gripper(self):
         self.rACT = 1
         self.rPR = 0
         self.rSP = 255
         self.rFR = 150
         self._update_cmd()
-    
+
     def deactivate_gripper(self):
         self.rACT = 0
         self._update_cmd()
-        
-    def activate_emergency_release(self,open_gripper=True):
+
+    def activate_emergency_release(self, open_gripper=True):
         self.rATR = 1
         self.rARD = 1
 
         if (open_gripper):
-            self.rARD=0
+            self.rARD = 0
         self._update_cmd()
-                
+
     def deactivate_emergency_release(self):
         self.rATR = 0
         self._update_cmd()
@@ -104,20 +105,20 @@ class GripperIO:
         self.rACT = 1
         self.rGTO = 0
         self._update_cmd()
-        
-    def parse_rsp(self,rsp):
+
+    def parse_rsp(self, rsp):
         if (verify_modbus_rtu_crc(rsp)):
             self.gACT = rsp[3] & 0x1
             self.gGTO = (rsp[3] & 0x8) >> 3
             self.gSTA = (rsp[3] & 0x30) >> 4
             self.gOBJ = (rsp[3] & 0xC0) >> 6
             self.gFLT = rsp[5] & 0x0F
-            self.gPR  = rsp[6] & 0xFF
-            self.gPO  = rsp[7] & 0xFF
-            self.gCU  = (rsp[8] & 0xFF)
+            self.gPR = rsp[6] & 0xFF
+            self.gPO = rsp[7] & 0xFF
+            self.gCU = (rsp[8] & 0xFF)
             return True
         return False
-                
+
     def is_ready(self):
         return self.gSTA == 3 and self.gACT == 1
 
@@ -158,4 +159,4 @@ class GripperIO:
         self.act_cmd[SPEED_INDEX] = self.rSP & 0xFF
         self.act_cmd[FORCE_INDEX] = self.rFR & 0xFF
         compute_modbus_rtu_crc(self.act_cmd)
-        self.act_cmd_bytes = array.array('B',self.act_cmd).tostring()
+        self.act_cmd_bytes = array.array('B', self.act_cmd).tobytes()
