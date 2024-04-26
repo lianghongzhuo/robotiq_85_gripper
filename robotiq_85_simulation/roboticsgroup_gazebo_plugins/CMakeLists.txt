@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.3)
+cmake_minimum_required(VERSION 3.10)
 project(roboticsgroup_gazebo_plugins)
 
 # Load catkin and all dependencies required for this package
